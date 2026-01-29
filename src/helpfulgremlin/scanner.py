@@ -15,6 +15,9 @@ class Scanner:
         # Always ignore .git directory
         lines.append(".git/")
         lines.append(".venv/")
+        lines.append("venv/")
+        lines.append("env/")
+        lines.append(".env/")
         lines.append("__pycache__/")
         lines.append("*.pyc")
         lines.append("node_modules/")

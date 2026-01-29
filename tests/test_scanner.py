@@ -22,6 +22,13 @@ def temp_repo(tmp_path):
 
     # Create lock file
     (tmp_path / "poetry.lock").write_text("HASH123...")
+
+    # Create venv structures (should be ignored)
+    (tmp_path / "venv" / "lib" / "site-packages").mkdir(parents=True)
+    (tmp_path / "venv" / "lib" / "site-packages" / "foo.py").write_text("import sys")
+    
+    (tmp_path / "env" / "bin").mkdir(parents=True)
+    (tmp_path / "env" / "bin" / "python").write_text("binary-ish")
     
     return tmp_path
 
@@ -42,6 +49,10 @@ def test_scanner_traversal(temp_repo):
     
     # Ignored by default (lock)
     assert "poetry.lock" not in found_files
+
+    # Ignored by default (common venv names)
+    assert "venv/lib/site-packages/foo.py" not in found_files
+    assert "env/bin/python" not in found_files
 
 def test_single_file_scan(temp_repo):
     """Test scanning a single file directly."""

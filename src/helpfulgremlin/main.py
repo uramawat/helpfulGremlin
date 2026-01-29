@@ -68,7 +68,7 @@ def scan(
     Scans the directory for secrets and sensitive artifacts.
     """
     
-    console.print(Panel.fit("👾 helpfulGremlin v0.1.1 is checking your vibes... ", style="bold purple"))
+    console.print(Panel.fit("👾 helpfulGremlin v0.1.2 is checking your vibes... ", style="bold purple"))
     
     scanner = Scanner(path)
     issues: List[Tuple[Path, int, SecretPattern, str]] = []
