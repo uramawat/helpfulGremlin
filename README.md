@@ -2,7 +2,7 @@
 
 **Sanity check your vibes before you git push.**
 
-![Build Status](https://github.com/Start-Vibe-Coding/helpfulGremlin/actions/workflows/release.yml/badge.svg)
+![Build Status](https://github.com/uramawat/helpfulGremlin/actions/workflows/release.yml/badge.svg)
 
 `helpfulGremlin` is a lightweight, zero-config CLI utility designed to scan your codebase for sensitive artifacts—API keys, secrets, tokens, and private keys—before they are accidentally exposed. Built for "vibe-coding" where velocity is high, it acts as a friendly guardrail.
 
