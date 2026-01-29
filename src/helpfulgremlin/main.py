@@ -1,4 +1,5 @@
 import typer
+import concurrent.futures
 from rich.console import Console
 from rich.table import Table
 from rich.panel import Panel
@@ -30,8 +31,6 @@ def get_remediation(pattern: SecretPattern, file_path: Path) -> str:
     return "Check and remove."
 
 console = Console()
-
-import concurrent.futures
 
 # ... existing imports ...
 
@@ -69,7 +68,7 @@ def scan(
     Scans the directory for secrets and sensitive artifacts.
     """
     
-    console.print(Panel.fit("👾 helpfulGremlin is checking your vibes...", style="bold purple"))
+    console.print(Panel.fit("👾 helpfulGremlin v0.1.1 is checking your vibes... ", style="bold purple"))
     
     scanner = Scanner(path)
     issues: List[Tuple[Path, int, SecretPattern, str]] = []
