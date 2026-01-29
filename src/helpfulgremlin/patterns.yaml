@@ -1,0 +1,71 @@
+patterns:
+  - name: "AWS Access Key"
+    pattern: "(A3T[A-Z0-9]|AKIA|AGPA|AIDA|AROA|AIPA|ANPA|ANVA|ASIA)[A-Z0-9]{16}"
+    description: "AWS Access Key ID detected. Ensure this is not hardcoded."
+  
+  - name: "AWS Secret Key"
+    pattern: "(?:[Aa][Ww][Ss])(.{0,20})?['\"][0-9a-zA-Z\/+]{40}['\"]"
+    description: "Potential AWS Secret Key detected."
+  
+  - name: "OpenAI API Key"
+    pattern: "sk-[a-zA-Z0-9]{20}T3BlbkFJ[a-zA-Z0-9]{20}|sk-(proj-|org-)?[a-zA-Z0-9]{32,}"
+    description: "OpenAI API Key detected."
+  
+  - name: "Stripe Secret Key"
+    pattern: "(sk_live_[0-9a-zA-Z]{24})"
+    description: "Stripe Live Secret Key detected."
+  
+  - name: "Slack Token"
+    pattern: "(xox[p|b|o|a]-[0-9]{12}-[0-9]{12}-[0-9]{12}-[a-z0-9]{32})"
+    description: "Slack API Token detected."
+  
+  - name: "Generic Private Key"
+    pattern: "-----BEGIN [A-Z]+ PRIVATE KEY-----"
+    description: "PEM Private Key block detected."
+  
+  - name: "GitHub Token"
+    pattern: "(ghp_[a-zA-Z0-9]{36}|github_pat_[a-zA-Z0-9]{22}_[a-zA-Z0-9]{59})"
+    description: "GitHub Personal Access Token detected."
+    
+  - name: "Gemini / Google Cloud API Key"
+    pattern: "AIza[0-9A-Za-z\\-_]{35}"
+    description: "Gemini / Google Cloud AI API Key detected."
+    
+  # - name: "Azure Storage Key"
+  #   pattern: "[a-zA-Z0-9+/]{88}"
+  #   description: "Potential Azure Storage Key detected (high false positive risk, check context)."
+    
+  - name: "Generic API Key"
+    pattern: "(?i)(?:api_key|apikey|access_token|auth_token)[\\s]*=[\\s]*['\"][a-zA-Z0-9_\\-]{16,64}['\"]"
+    description: "Generic API Key assignment detected."
+
+  - name: "Facebook Access Token"
+    pattern: "EAACEdEose0cBA[0-9A-Za-z]+"
+    description: "Facebook Access Token detected."
+
+  - name: "Anthropic API Key"
+    pattern: "sk-ant-[a-zA-Z0-9\\-_]{30,}"
+    description: "Anthropic API Key detected."
+
+
+
+  - name: "Twilio API Key"
+    pattern: "SK[0-9a-fA-F]{32}"
+    description: "Twilio API Key detected."
+
+  - name: "Twilio Account SID"
+    pattern: "AC[a-zA-Z0-9_\\-]{32}"
+    description: "Twilio Account SID detected."
+
+  - name: "Salesforce Access Token"
+    pattern: "00D[a-zA-Z0-9]{12,15}![a-zA-Z0-9_.]{15,}"
+    description: "Salesforce Access Token detected."
+
+  - name: "HuggingFace Token"
+    pattern: "(?:hf_)[a-zA-Z0-9]{34,}"
+    description: "HuggingFace Read/Write Token detected."
+
+  - name: "Replicate API Token"
+    pattern: "r8_[a-zA-Z0-9]{32,}"
+    description: "Replicate API Key detected."
+

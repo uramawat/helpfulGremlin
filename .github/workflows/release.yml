@@ -1,0 +1,46 @@
+name: Publish to PyPI
+
+on:
+  push:
+    branches:
+      - "main"
+    tags:
+      - "v*"  # Trigger only on version tags (e.g., v0.1.0)
+  workflow_dispatch:  # Allow manual trigger
+
+jobs:
+  test_and_publish:
+    name: Build & Publish
+    runs-on: ubuntu-latest
+    
+    # Permission needed for OIDC/Trusted Publishing (optional, sticking to token for simplicity)
+    permissions:
+      contents: read
+      id-token: write 
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version-file: ".python-version"
+
+      - name: Install dependencies
+        run: uv sync --all-extras --dev
+
+      - name: Run Tests
+        run: uv run pytest
+
+      - name: Build
+        run: uv build
+
+      - name: Publish to PyPI
+        if: startsWith(github.ref, 'refs/tags/v')  # Only publish on tags
+        run: uv publish
+        env:
+          UV_PUBLISH_TOKEN: ${{ secrets.PYPI_TOKEN }}
