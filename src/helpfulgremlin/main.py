@@ -41,7 +41,7 @@ def scan_file_worker(file_path: Path) -> List[Tuple[Path, int, SecretPattern, st
     try:
         with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
             for i, line in enumerate(f, 1):
-                match = detector.check_line(line)
+                match = detector.check_line(line, file_path)
                 if match:
                     content_snippet = line.strip()
                     if len(content_snippet) > 50:

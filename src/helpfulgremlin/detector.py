@@ -1,6 +1,7 @@
 import re
 from dataclasses import dataclass
 from typing import List, Optional
+from pathlib import Path
 
 import yaml
 import importlib.resources
@@ -10,6 +11,7 @@ class SecretPattern:
     name: str
     pattern: re.Pattern
     description: str
+    files: Optional[List[str]] = None
 
 class Detector:
     def __init__(self):
@@ -35,7 +37,8 @@ class Detector:
                             self.patterns.append(SecretPattern(
                                 name=item["name"],
                                 pattern=re.compile(item["pattern"]),
-                                description=item["description"]
+                                description=item["description"],
+                                files=item.get("files")
                             ))
                         except re.error as e:
                             print(f"Error compiling regex for {item['name']}: {e}")
@@ -58,13 +61,19 @@ class Detector:
             entropy += - p_x * math.log2(p_x)
         return entropy
 
-    def check_line(self, line: str) -> Optional[SecretPattern]:
+    def check_line(self, line: str, file_path: Path = None) -> Optional[SecretPattern]:
         """
         Checks a single line against all patterns.
         Returns the first matching SecretPattern, or None.
         """
+        extension = file_path.suffix if file_path else ""
+
         # 1. Regex Checks
         for pat in self.patterns:
+            # Context-Aware Check: Skip if pattern is not relevant for this file type
+            if pat.files and extension not in pat.files:
+                continue
+
             if pat.pattern.search(line):
                 return pat
         

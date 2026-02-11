@@ -69,3 +69,32 @@ patterns:
     pattern: "r8_[a-zA-Z0-9]{32,}"
     description: "Replicate API Key detected."
 
+  - name: "Unsafe Deserialization"
+    pattern: "pickle\\.load\\("
+    description: "Avoid using pickle.load on untrusted data. It can allow arbitrary code execution."
+    files: [".py"]
+
+  - name: "Unsafe Execution (eval)"
+    pattern: "eval\\("
+    description: "Avoid using eval(). It can execute arbitrary code."
+    files: [".py"]
+
+  - name: "Unsafe Execution (exec)"
+    pattern: "exec\\("
+    description: "Avoid using exec(). It can execute arbitrary code."
+    files: [".py"]
+
+  - name: "Insecure SSL (verify=False)"
+    pattern: "verify\\s*=\\s*False"
+    description: "SSL verification disabled. This allows Man-in-the-Middle attacks."
+    files: [".py"]
+
+  - name: "Weak Hashing (MD5)"
+    pattern: "hashlib\\.md5\\("
+    description: "MD5 is a weak hash function. Use SHA-256 or stronger."
+    files: [".py"]
+
+  - name: "Binding to All Interfaces"
+    pattern: "host=['\"]0\\.0\\.0\\.0['\"]|bind=['\"]0\\.0\\.0\\.0['\"]"
+    description: "Binding to 0.0.0.0 exposes the service to all network interfaces."
+    files: [".py"]

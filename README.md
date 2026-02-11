@@ -4,7 +4,9 @@
 
 ![Build Status](https://github.com/uramawat/helpfulGremlin/actions/workflows/release.yml/badge.svg)
 
-`helpfulGremlin` is a lightweight, zero-config CLI utility designed to scan your codebase for sensitive artifacts—API keys, secrets, tokens, and private keys—before they are accidentally exposed. Built for "vibe-coding" where velocity is high, it acts as a friendly guardrail.
+I built `helpfulGremlin` because I wanted a lightweight, zero-config CLI utility to scan my codebase for sensitive artifacts—API keys, secrets, tokens, and private keys—before they are accidentally exposed. It's designed for "vibe-coding" where velocity is high, acting as a friendly guardrail.
+
+Recently, I extended it to also check for **bad security practices** (like `eval()`, `pickle.load()`, or disabling SSL verification), making it more than just a secret scanner.
 
 ## 🚀 Quick Start
 
@@ -41,21 +43,23 @@ helpfulGremlin . --workers 4
 ## 🏗 Architecture & Design Decisions
 
 ### 1. **Python & `uv` First**
-We chose **Python** for its rich ecosystem of text processing and regex libraries. Typically, Python tools are hard to distribute, but with **`uv`**, `helpfulGremlin` can be run ephemerally (`uvx`) without messing up your system python.
+I chose **Python** for its rich ecosystem of text processing and regex libraries. Typically, Python tools are hard to distribute, but with **`uv`**, `helpfulGremlin` can be run ephemerally (`uvx`) without messing up your system python.
 
 ### 2. **Hybrid Detection Engine**
-The tool uses a two-layer detection strategy:
+I implemented a two-layer detection strategy:
 - **Layer 1: Regex Signatures**: Fast pattern matching for known secrets (AWS, OpenAI, Stripe, etc.). Patterns are externalized in `src/helpfulgremlin/patterns.yaml`.
 - **Layer 2: Entropy Analysis**: Uses Shannon Entropy to detect high-randomness strings (like passwords or unknown API keys) that don't match specific regexes. This catches weird custom secrets others miss.
 
 ### 3. **Smart Context Awareness**
+I designed the scanner to be intelligent about *where* it looks:
+- **Context-Aware Scanning**: Security checks are scoped to file types (e.g., Python-specific checks like `eval()` only run on `.py` files). This keeps performance high.
 - **Gitignore Support**: Automatically parses your `.gitignore` to avoid scanning `node_modules`, `venv`, etc.
 - **Binary Skipping**: Detects and skips binary files to save CPU.
 - **Large File Protection**: Skipping files > 5MB to prevent memory exhaustion.
-- **Context-Aware Remediation**: It doesn't just say "Error"; it suggests *how* to fix it (e.g., "Move this hardcoded key to an environment variable").
+- **Remediation**: It doesn't just say "Error"; it suggests *how* to fix it (e.g., "Move this hardcoded key to an environment variable").
 
 ### 4. **Modern UX (`textual` / `rich`)**
-We use the `rich` library to provide beautiful, emoji-enriched terminal output, progress bars, and tables. Security tools shouldn't be boring 1990s textual walls.
+I used the `rich` library to provide beautiful, emoji-enriched terminal output, progress bars, and tables. Security tools shouldn't be boring 1990s textual walls.
 
 ## 🕵️ Detected Patterns
 
@@ -64,6 +68,12 @@ We use the `rich` library to provide beautiful, emoji-enriched terminal output, 
 - **Cloud Providers**: AWS (Access/Secret Keys), Google Cloud API Keys, Azure Storage Keys (opt-in).
 - **AI/ML**: OpenAI, Anthropic, Gemini, HuggingFace, Replicate.
 - **Services**: Stripe, Slack, Twilio, Salesforce, Facebook.
+- **Security Best Practices**: 
+    - Unsafe Check: `eval()`, `exec()`
+    - Unsafe Deserialization: `pickle.load()`
+    - Insecure SSL: `verify=False`
+    - Weak Hashing: `MD5`
+    - Insecure Network Binding: `0.0.0.0`
 - **Generic**: PEM Private Keys, Generic "api_key" variable assignments.
 - **Unknowns**: High-entropy strings (> 4.2 bits of randomness).
 
