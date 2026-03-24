@@ -98,3 +98,51 @@ patterns:
     pattern: "host=['\"]0\\.0\\.0\\.0['\"]|bind=['\"]0\\.0\\.0\\.0['\"]"
     description: "Binding to 0.0.0.0 exposes the service to all network interfaces."
     files: [".py"]
+
+  - name: "Google Cloud Service Account"
+    pattern: "\"type\":\\s*\"service_account\""
+    description: "Google Cloud Service Account JSON detected."
+
+  - name: "PostgreSQL / MySQL URI"
+    pattern: "(?:postgres|mysql)://[a-zA-Z0-9_]+:[^@]+@[a-zA-Z0-9.-]+:[0-9]+/[a-zA-Z0-9_]+"
+    description: "Database URI with credentials detected."
+
+  - name: "MongoDB URI"
+    pattern: "mongodb(?:\\+srv)?://[a-zA-Z0-9_]+:[^@]+@[a-zA-Z0-9.-]+"
+    description: "MongoDB URI with credentials detected."
+
+  - name: "Redis URI"
+    pattern: "redis://(?:[a-zA-Z0-9_]+:)?[^@]+@[a-zA-Z0-9.-]+:[0-9]+"
+    description: "Redis URI with credentials detected."
+
+  - name: "JWT Token"
+    pattern: "eyJ[A-Za-z0-9-_=]+\\.[A-Za-z0-9-_=]+\\.?[A-Za-z0-9-_.+/=]*"
+    description: "Hardcoded JWT Token detected. May contain sensitive claims or be a valid session."
+
+  - name: "Command Injection Risk (shell=True)"
+    pattern: "shell\\s*=\\s*True"
+    description: "Using shell=True in subprocess can lead to command injection if inputs are not sanitized."
+    files: [".py"]
+
+  - name: "Flask/Django Debug Mode"
+    pattern: "DEBUG\\s*=\\s*True|app\\.run\\(.*debug\\s*=\\s*True.*\\)"
+    description: "Running with Debug mode enabled in production can expose sensitive internal data."
+    files: [".py"]
+
+  - name: "Disabled Node TLS"
+    pattern: "NODE_TLS_REJECT_UNAUTHORIZED\\s*=\\s*['\"]?0['\"]?"
+    description: "Disabling TLS verification globally in Node.js allows Man-in-the-Middle attacks."
+    files: [".js", ".ts"]
+
+  - name: "React dangerouslySetInnerHTML"
+    pattern: "dangerouslySetInnerHTML"
+    description: "Using dangerouslySetInnerHTML can expose the application to XSS attacks."
+    files: [".jsx", ".tsx", ".js", ".ts"]
+
+  - name: "Docker Root User"
+    pattern: "^\\s*USER\\s+root"
+    description: "Running containers as root is discouraged. Create and use a non-root user."
+
+  - name: "SQL Injection Risk (f-string/template)"
+    pattern: "(?i)(?:SELECT|INSERT|UPDATE|DELETE).+(?:%s|\\{[^}]+\\}|\\$)"
+    description: "Potential SQL injection risk. Ensure parameterized queries are used instead of string formatting."

@@ -65,16 +65,19 @@ I used the `rich` library to provide beautiful, emoji-enriched terminal output, 
 
 `helpfulGremlin` currently detects:
 
-- **Cloud Providers**: AWS (Access/Secret Keys), Google Cloud API Keys, Azure Storage Keys (opt-in).
+- **Cloud Providers**: AWS (Access/Secret Keys), Google Cloud API Keys, Google Cloud Service Accounts, Azure Storage Keys (opt-in).
+- **Databases**: PostgreSQL, MySQL, MongoDB, and Redis URIs.
 - **AI/ML**: OpenAI, Anthropic, Gemini, HuggingFace, Replicate.
 - **Services**: Stripe, Slack, Twilio, Salesforce, Facebook.
 - **Security Best Practices**: 
-    - Unsafe Check: `eval()`, `exec()`
+    - Unsafe Checks: `eval()`, `exec()`, `shell=True`
     - Unsafe Deserialization: `pickle.load()`
-    - Insecure SSL: `verify=False`
+    - Insecure SSL/TLS: `verify=False`, Node `NODE_TLS_REJECT_UNAUTHORIZED`
+    - Insecure Environments: Flask/Django `debug=True`, Docker `USER root`
+    - Web Risks: `dangerouslySetInnerHTML` (XSS), formatted SQL queries (SQLi)
     - Weak Hashing: `MD5`
     - Insecure Network Binding: `0.0.0.0`
-- **Generic**: PEM Private Keys, Generic "api_key" variable assignments.
+- **Generic**: PEM Private Keys, SSH Private Keys, JWT Tokens, Generic "api_key" variable assignments.
 - **Unknowns**: High-entropy strings (> 4.2 bits of randomness).
 
 ## ⚙️ Configuration

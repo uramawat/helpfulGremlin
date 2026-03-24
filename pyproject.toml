@@ -1,7 +1,7 @@
 [project]
 name = "helpfulgremlin"
-version = "0.1.3"
-description = "Add your description here"
+version = "0.1.4"
+description = "Rapid sanity checking for Vibe Coded Projects"
 readme = "README.md"
 license = { file = "LICENSE" }
 classifiers = [
