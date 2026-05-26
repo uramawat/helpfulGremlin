@@ -4,9 +4,9 @@
 
 ![Build Status](https://github.com/uramawat/helpfulGremlin/actions/workflows/release.yml/badge.svg)
 
-I built `helpfulGremlin` because I wanted a lightweight, zero-config CLI utility to scan my codebase for sensitive artifacts—API keys, secrets, tokens, and private keys—before they are accidentally exposed. It's designed for "vibe-coding" where velocity is high, acting as a friendly guardrail.
+I built `helpfulGremlin` because I wanted a lightweight, zero-config CLI utility to scan my codebase for sensitive artifacts—API keys, secrets, tokens, private keys, and now AI-agent configuration leaks—before they are accidentally exposed. It's designed for "vibe-coding" where velocity is high, acting as a friendly guardrail.
 
-Recently, I extended it to also check for **bad security practices** (like `eval()`, `pickle.load()`, or disabling SSL verification), making it more than just a secret scanner.
+Recently, I extended it to also check for **AI-agent-era leak surfaces** (like MCP configs, `.env` files, npm/PyPI auth files, and pasted bearer headers) plus bad security practices (like `eval()`, `pickle.load()`, or disabling SSL verification), making it more than just a generic secret scanner.
 
 ## 🚀 Quick Start
 
@@ -46,13 +46,15 @@ helpfulGremlin . --workers 4
 I chose **Python** for its rich ecosystem of text processing and regex libraries. Typically, Python tools are hard to distribute, but with **`uv`**, `helpfulGremlin` can be run ephemerally (`uvx`) without messing up your system python.
 
 ### 2. **Hybrid Detection Engine**
-I implemented a two-layer detection strategy:
+I implemented a three-layer detection strategy:
 - **Layer 1: Regex Signatures**: Fast pattern matching for known secrets (AWS, OpenAI, Stripe, etc.). Patterns are externalized in `src/helpfulgremlin/patterns.yaml`.
 - **Layer 2: Entropy Analysis**: Uses Shannon Entropy to detect high-randomness strings (like passwords or unknown API keys) that don't match specific regexes. This catches weird custom secrets others miss.
+- **Layer 3: Agent Config Analysis**: Parses local MCP/agent JSON configs when possible and inspects env, header, command, arg, and URL values for hardcoded credentials.
 
 ### 3. **Smart Context Awareness**
 I designed the scanner to be intelligent about *where* it looks:
 - **Context-Aware Scanning**: Security checks are scoped to file types (e.g., Python-specific checks like `eval()` only run on `.py` files). This keeps performance high.
+- **Agent-Aware Defaults**: Warns on risky local config files such as `.mcp.json`, `.claude/settings.json`, `.cursor/mcp.json`, `.env.local`, `.npmrc`, `.pypirc`, and cloud credential JSON files.
 - **Gitignore Support**: Automatically parses your `.gitignore` to avoid scanning `node_modules`, `venv`, etc.
 - **Binary Skipping**: Detects and skips binary files to save CPU.
 - **Large File Protection**: Skipping files > 5MB to prevent memory exhaustion.
@@ -69,6 +71,11 @@ I used the `rich` library to provide beautiful, emoji-enriched terminal output, 
 - **Databases**: PostgreSQL, MySQL, MongoDB, and Redis URIs.
 - **AI/ML**: OpenAI, Anthropic, Gemini, HuggingFace, Replicate.
 - **Services**: Stripe, Slack, Twilio, Salesforce, Facebook.
+- **AI Agent Configs**:
+    - MCP project configs: `.mcp.json`, `mcp.json`
+    - Agent/editor configs: `.claude/settings.json`, `.cursor/mcp.json`, `claude_desktop_config.json`
+    - Dangerous local credential files: `.env*`, `.npmrc`, `.pypirc`, `.netrc`, cloud credential JSON
+    - Pasted bearer authorization headers and hardcoded MCP env/header values
 - **Security Best Practices**: 
     - Unsafe Checks: `eval()`, `exec()`, `shell=True`
     - Unsafe Deserialization: `pickle.load()`

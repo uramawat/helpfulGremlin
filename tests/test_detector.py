@@ -1,4 +1,5 @@
 import pytest
+from pathlib import Path
 from helpfulgremlin.detector import Detector
 
 @pytest.fixture
@@ -60,3 +61,39 @@ def test_entropy_false_positives(detector):
         if match:
              print(f"Failed on: {safe} matched {match.name}")
         assert match is None
+
+def test_bearer_header_detection(detector):
+    match = detector.check_line("Authorization: Bearer abcdefghijklmnopqrstuvwxyz123456")
+    assert match is not None
+    assert match.name == "Bearer Authorization Header"
+    assert match.category == "secret"
+
+def test_npm_token_detection(detector):
+    match = detector.check_line("//registry.npmjs.org/:_authToken=npm_abcdefghijklmnopqrstuvwxyz123456")
+    assert match is not None
+    assert match.name == "npm Token"
+
+def test_pypi_token_detection(detector):
+    match = detector.check_line("password = pypi-abcdefghijklmnopqrstuvwxyz123456")
+    assert match is not None
+    assert match.name == "PyPI Token"
+
+def test_agent_config_hardcoded_env_value(detector):
+    text = '{"mcpServers":{"github":{"env":{"GITHUB_TOKEN":"plain-secret-value"}}}}'
+    findings = detector.scan_file(Path(".mcp.json"), text)
+
+    assert any(f.name == "Hardcoded Agent Config Secret" for f in findings)
+    assert any(f.name == "Sensitive File Present" for f in findings)
+
+def test_agent_config_placeholder_is_not_secret(detector):
+    text = '{"mcpServers":{"github":{"env":{"GITHUB_TOKEN":"${GITHUB_TOKEN}"}}}}'
+    findings = detector.scan_file(Path(".mcp.json"), text)
+
+    assert [f.name for f in findings] == ["Sensitive File Present"]
+
+def test_invalid_agent_config_falls_back_to_line_scan(detector):
+    text = '{"mcpServers": {"github": {"env": {"OPENAI_API_KEY": "sk-proj-00000000000000000000000000000000"'
+    findings = detector.scan_file(Path(".mcp.json"), text)
+
+    assert any(f.name == "Unreadable Agent Config" for f in findings)
+    assert any(f.name == "OpenAI API Key" for f in findings)

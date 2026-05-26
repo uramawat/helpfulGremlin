@@ -39,3 +39,22 @@ def test_verbose_flag(tmp_path):
     assert result.exit_code == 0
     assert "Scanned" in result.stdout
     assert "test.py" in result.stdout
+
+def test_sensitive_file_presence_warning(tmp_path):
+    """Test that dangerous local config files create presence warnings."""
+    (tmp_path / ".env.local").write_text("PLACEHOLDER=example")
+    result = runner.invoke(app, [str(tmp_path)])
+
+    assert result.exit_code == 1, f"STDOUT: {result.stdout}"
+    assert "Sensitive File Present" in result.stdout
+    assert "credential-file" in result.stdout
+
+def test_output_includes_severity_and_category(tmp_path):
+    """Test that the report exposes normalized finding metadata."""
+    (tmp_path / "dirty.py").write_text("key = 'AKIA0000000000000000'")
+    result = runner.invoke(app, [str(tmp_path)])
+
+    assert result.exit_code == 1, f"STDOUT: {result.stdout}"
+    assert "Severity" in result.stdout
+    assert "Category" in result.stdout
+    assert "secret" in result.stdout

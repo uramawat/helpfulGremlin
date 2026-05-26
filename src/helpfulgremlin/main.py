@@ -3,53 +3,26 @@ import concurrent.futures
 from rich.console import Console
 from rich.table import Table
 from rich.panel import Panel
-from rich.text import Text
 from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn, TaskProgressColumn, TimeElapsedColumn
 from pathlib import Path
-from typing import List, Tuple
+from typing import List
 
 from .scanner import Scanner
-from .detector import Detector, SecretPattern
+from .detector import Detector, Finding
 
 app = typer.Typer(help="helpfulGremlin: Sanity check your repo for secrets before you push.")
-def get_remediation(pattern: SecretPattern, file_path: Path) -> str:
-    """Generate smart remediation advice based on context."""
-    fname = file_path.name.lower()
-    
-    if ".env" in fname:
-        return "CRITICAL: Stop tracking this file. Run `git rm --cached .env` and add to .gitignore."
-    
-    if "key" in pattern.name.lower() or "token" in pattern.name.lower():
-        return "Revoke key immediately. Load via `os.environ`."
-        
-    if "private key" in pattern.name.lower():
-        return "Rotate key. Never commit PEM files."
-        
-    if "entropy" in pattern.name.lower():
-        return "Verify if secret. If yes, move to env vars."
-        
-    return "Check and remove."
 
 console = Console()
 
-# ... existing imports ...
-
-def scan_file_worker(file_path: Path) -> List[Tuple[Path, int, SecretPattern, str]]:
+def scan_file_worker(file_path: Path) -> List[Finding]:
     """Worker function to scan a single file."""
-    issues = []
     detector = Detector() # Lightweight enough to init per process
     try:
         with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
-            for i, line in enumerate(f, 1):
-                match = detector.check_line(line, file_path)
-                if match:
-                    content_snippet = line.strip()
-                    if len(content_snippet) > 50:
-                        content_snippet = content_snippet[:50] + "..."
-                    issues.append((file_path, i, match, content_snippet))
+            return detector.scan_file(file_path, f.read())
     except Exception:
         pass # Worker shouldn't crash main process
-    return issues
+    return []
 
 @app.command()
 def scan(
@@ -68,11 +41,12 @@ def scan(
     Scans the directory for secrets and sensitive artifacts.
     """
     
-    console.print(Panel.fit("👾 helpfulGremlin v0.1.2 is checking your vibes... ", style="bold purple"))
+    console.print(Panel.fit("👾 helpfulGremlin v0.1.4 is checking your vibes... ", style="bold purple"))
     
     scanner = Scanner(path)
-    issues: List[Tuple[Path, int, SecretPattern, str]] = []
+    issues: List[Finding] = []
     scanned_count = 0
+    base_path = path if path.is_dir() else path.parent
 
     with Progress(
         SpinnerColumn(),
@@ -126,20 +100,31 @@ def scan(
     # Report Issues using Table (same as before)
     table = Table(title=f"🚨 Found {len(issues)} Potential Issues", show_lines=True)
     table.add_column("Location", style="cyan", no_wrap=True)
+    table.add_column("Severity", style="bold")
+    table.add_column("Category", style="magenta")
     table.add_column("Issue Type", style="bold red")
     table.add_column("Snippet", style="yellow")
     table.add_column("Suggestion", style="green")
 
-    for file_path, line_no, pattern, snippet in issues:
-        rel_path = file_path.relative_to(path)
+    for finding in issues:
+        try:
+            rel_path = finding.file_path.relative_to(base_path)
+        except ValueError:
+            rel_path = finding.file_path
+        location = f"{rel_path}:{finding.line_no}" if finding.line_no else str(rel_path)
         table.add_row(
-            f"{rel_path}:{line_no}",
-            pattern.name,
-            snippet,
-            get_remediation(pattern, file_path)
+            location,
+            finding.severity,
+            finding.category,
+            finding.name,
+            finding.snippet,
+            finding.remediation,
         )
 
     console.print(table)
+    console.print("\n[bold]Finding details[/bold]")
+    for finding in issues:
+        console.print(f"- {finding.severity} {finding.category}: {finding.name}")
     console.print("\n[bold red]⚠️  Please review the above issues before pushing![/bold red]")
     raise typer.Exit(code=1)
 
